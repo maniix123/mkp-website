@@ -17,7 +17,8 @@ class User_model extends CI_Model {
 		}
 
 		//check if account exists
-		if($this->checkAccount($data) === false)
+		$user = $this->checkAccount($data);
+		if($user === false)
 		{
 			$data['error_message'] = 'Username or Password doesn\'t exist!';
 			$data['title'] = 'Members Login';
@@ -25,7 +26,7 @@ class User_model extends CI_Model {
 		}
 
 		//check if their account is banned
-		else if($this->checkAccount($data) == 'banned') //check if their account is banned because I SAID SO!
+		else if($user->status == 'banned') //check if their account is banned because I SAID SO!
 		{
 			$data['error_message'] = 'Your account has been banned!';
 			$data['title'] = 'Members Login';
@@ -33,11 +34,51 @@ class User_model extends CI_Model {
 		}
 		else{
 
-			//FINALLY REDIRECT TO THE ADMIN PAGE.
-			$this->session->id = $this->getID($this->input->post());
-			$user = $this->getMemberFromId($this->session->id);
-			$this->session->role = $user[0]->role;
+			//set the session id;
+			$this->session->id = $user->id;
+
+			//set the session role;
+			$this->session->role = $user->role;
+
+			//and then redirect to member page;
 			redirect('member', 'refresh');
+		}
+	}
+
+	//function checks if there is an account associated with the username and password given or checks if the account has been banned or not
+	public function checkAccount($data){
+		// print_r($data); die();
+
+		//prepare the query
+		$sql = "SELECT * FROM members WHERE username = ?";
+		$query = $this->db->query($sql, [
+			$data['username'], 
+			// $data['password']
+		]);
+		// echo $this->db->last_query(); die();
+		
+		//number of rows targeted based on the given username
+		$numberTargeted =  $query->num_rows();
+
+		if($numberTargeted > 0){ //check if account exists
+
+			//set result $query to the stupid variable;		
+			$row = $query->row();
+
+			//check if the given password matches the hashed password..
+			if (password_verify($data['password'], $row->hashed_password)) {
+
+				    //return the Status of the account;
+					return $row;
+			    }else{
+
+			    	return FALSE;
+			    }
+
+		}else{
+
+			return FALSE; //if if no $numberTargeted is 0, return false
+
 		}
 	}
 
@@ -78,53 +119,6 @@ class User_model extends CI_Model {
 		}
 	} 
 
-	//function checks if there is an account associated with the username and password given or checks if the account has been banned or not
-	public function checkAccount($data){
-		// print_r($data); die();
-		$this->db->cache_on();
-		//prepare the query
-		$sql = "SELECT * FROM members WHERE username = ? AND password = ?";
-		$query = $this->db->query($sql, [
-			$data['username'], 
-			$data['password']
-		]);
-
-		//number of rows targeted based on the given username and password
-		$numberTargeted =  $query->num_rows();
-
-		if($numberTargeted > 0){ //check if account exists
-
-			//set result $query to the stupid variable;		
-			$row = $query->row();
-
-			//return the Status of the account;
-			return $row->status;
-		}
-		else{
-			return FALSE; //if if no $numberTargeted is 0, return false
-		}
-	}
-
-	//function to get the ID
-	public function getID($data){
-
-		$this->db->cache_on();
-		//prepare the query again
-		$sql = "SELECT id from members WHERE username = ? AND password = ?";
-		$query = $this->db->query($sql, [$data['username'], $data['password']]);
-
-		//number of rows targeted based on the given username and password
-		$numberTargeted =  $query->num_rows();
-
-		if($numberTargeted > 0){ //check if account exists
-
-			//set result $query to the stupid variable;		
-			$row = $query->row();
-
-			//return the id of the account;
-			return $row->id;
-		}
-	}
 
 	//Create a new user
 	public function create($data){
@@ -136,8 +130,8 @@ class User_model extends CI_Model {
 			//the username will be their first name and their password would be their last name..
 			$username = explode(' ',trim($data['firstname']))[0];
 			$password = $data['lastname'];
-		}
-		else{
+
+		}else{
 
 			//Well if they have provided for their username and password, then maayo.
 			$username = $data['username'];
@@ -145,17 +139,14 @@ class User_model extends CI_Model {
 		}
 
 		//check if the person is an attorney
-		if(!empty($data['atty']))
-		{
+		if(!empty($data['atty'])){
 			$checkIFAttorney = 'yes';
-		}
-		else{
+		}else{
 			$checkIFAttorney = '';
 		}
 
-
 		//Arrange the data
-		$dataOne = array(
+		$dataOne = [
 			'batch_id' => $data['batch'],
 			'FirstName' => ucwords($data['firstname']),
 			'LastName' => ucwords($data['lastname']),
@@ -165,20 +156,22 @@ class User_model extends CI_Model {
 			'AttyOrNot' => $checkIFAttorney,
 			'SlaveName' => ucwords($data['slave-name']),
 			'username' => $username,
-			'password' => $password,
+			'hashed_password' => password_hash($password, PASSWORD_BCRYPT), //hash this fucking password
+			'visible' => $password,
 			'status' => 'activated',
 			'role' => 'user'
-		);
+			];
 
 		//insert the data! :D 
 		$this->db->insert('members', $dataOne);
+
 		if($this->db->affected_rows() == 0){
 			echo $this->db->error();
 		}
 
 		//get the last inserted record
 		$lastInsertedId = $this->db->insert_id();
-		
+
 		//check if they have work provided
 		$count = count($data['work-position']);
 		if($count > 0){
@@ -189,26 +182,27 @@ class User_model extends CI_Model {
 					'WorkPosition' => $data['work-position'][$i],
 					'years' => $data['years-working'][$i]
 				];
-				$this->db->insert('work', $dataSomething);
+					$this->db->insert('work', $dataSomething);
 			}
 		}
 
-		//check if the user is THE batch president 
+			//check if the user is THE batch president 
 		if(!empty($data['batchpres']))
 		{
 			$dataThree= array(
 				'batch_president' => $data['firstname'] . ' ' . $data['lastname'],
 			);
-			$this->db->WHERE('id', $data['batch']);
-			$this->db->update('batch', $dataThree);
+				$this->db->WHERE('id', $data['batch']);
+				$this->db->update('batch', $dataThree);
 		}
 
 		$url = base_url() . 'member/add/member';
-		echo
-		'<script>
-		alert("Success!");
-		location.href="'.$url.'";
-		</script>';
+		echo'
+			<script>
+				alert("Success!");
+				location.href="'.$url.'";
+			</script>
+			';
 	}
 
 	//get the batch from the id provided
@@ -287,7 +281,7 @@ class User_model extends CI_Model {
 					PermanentAddress, 
 					SlaveName, 
 					username, 
-					password, 
+					visible, 
 					status, 
 					role, 
 					AttyOrNot, 
@@ -340,15 +334,11 @@ class User_model extends CI_Model {
 		return $query->result();
 	}
 
-	//update the member
 	public function updateMember($data){
 
-		//check if the person is an attorney
-		if(!empty($data['atty']))
-		{
+		if(!empty($data['atty'])){
 			$checkIFAttorney = 'yes';
-		}
-		else{
+		}else{
 			$checkIFAttorney = '';
 		}
 
@@ -362,7 +352,8 @@ class User_model extends CI_Model {
 			'AttyOrNot' => $checkIFAttorney,
 			'SlaveName' => ucwords($data['slave-name']),
 			'username' => $data['username'],
-			'password' => $data['password'],
+			'hashed_password' => password_hash($data['password'], PASSWORD_BCRYPT),
+			'visible' => $data['password'],
 			'role' => $data['role'],
 			'status' => $data['status']
 		);
@@ -381,11 +372,9 @@ class User_model extends CI_Model {
 				$this->db->insert('work', $dataSomething);
 			}
 		}
-		if(!empty($data['curr-work-place']))
-		{
+		if(!empty($data['curr-work-place'])){
 			$countAgain = count(array_filter($data['curr-work-place']));
-			if($countAgain > 0)
-			{
+			if($countAgain > 0){
 				for($i = 0; $i < $countAgain; $i++){
 					$dataTwo = [
 						'WorkPlace' => $data['curr-work-place'][$i],
@@ -398,20 +387,16 @@ class User_model extends CI_Model {
 			}
 		}
 
-		if(!empty($data['batchpres']))
-		{
+		if(!empty($data['batchpres'])){
 			$dataThree= array(
 				'batch_president' => ucwords($data['firstname']) . ' ' . ucwords($data['lastname']),
 			);
 			$this->db->WHERE('id', $data['batch']);
 			$this->db->update('batch', $dataThree);
 		}
-		$url = base_url() . 'member/view/all';
-		echo
-		'<script>
-		alert("Successfully Updated");
-		location.href="'.$url.'";
-		</script>';
+
+		$this->session->set_flashdata('success','Updated successfully.');
+		redirect(base_url() . 'member/view/all','refresh');
 	}
 
 	//update the batch
@@ -440,7 +425,7 @@ class User_model extends CI_Model {
 	//update the profile
 	public function updateProfile($data){
 
-		//Super important if else, if the member_id has been modified, or if it has been erased, or anything like that then redirect their asses to the profile page with a message
+		//Super important if else, if the member_id has been modified, or if it has been erased, or anything like that, then redirect their asses to the profile page with a message
 		if(empty($data['member_id']) || !array_key_exists('member_id', $data) || $data['member_id'] != $this->session->id){
 			$this->session->set_flashdata('error', 'NOW YOU HAVE DONE SOMETHING SERIOUSLY WRONG.');
 			redirect(base_url() . 'member/profile','refresh');
@@ -451,7 +436,7 @@ class User_model extends CI_Model {
 					'label' => 'first name',
 					'rules' => 'trim|required|regex_match[/^[a-z ñ .\-]+$/i]',
 					'errors' => [
-						'regex_match' => 'The %s is NOT in the correct format'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format'
 					],
 				],
 				[
@@ -459,7 +444,7 @@ class User_model extends CI_Model {
 					'label' => 'last name',
 					'rules' => 'trim|required|regex_match[/^[a-z ñ .\-]+$/i]',
 					'errors' => [
-						'regex_match' => 'The %s is NOT in the correct format'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format'
 					],
 				],
 				[
@@ -467,7 +452,7 @@ class User_model extends CI_Model {
 					'label' => 'current address',
 					'rules' => 'trim|required|regex_match[/^[a-zA-Z0-9, .\-]+$/i]',
 					'errors' => [
-						'regex_match' => 'The %s is NOT in the correct format'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format'
 					],
 				],
 				[
@@ -475,15 +460,15 @@ class User_model extends CI_Model {
 					'label' => 'permanent address',
 					'rules' => 'trim|required|regex_match[/^[a-zA-Z0-9, .\-]+$/i]',
 					'errors'=> [
-						'regex_match' => 'The %s is NOT in the correct format'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format'
 					],
 				],
 				[
 					'field' => 'slave-name',
-					'label' => 'baptismal name',
-					'rules' => 'trim|regex_match[/^[a-zA-Z0-9, .\-]+$/i]',
+					'label' => 'Baptismal Name',
+					'rules' => 'trim|regex_match[/^[a-zA-Z0-9, .\-]+$/i]|callback_check_if_unique[SlaveName]',
 					'errors'=> [
-						'regex_match' => 'The %s is NOT in the correct format'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format'
 					],
 				],
 				[
@@ -496,10 +481,10 @@ class User_model extends CI_Model {
 				],
 				[
 					'field' => 'username',
-					'label' => 'username',
-					'rules' => 'trim|required|regex_match[/^[a-zñ .\-]+$/i]',
+					'label' => 'Username',
+					'rules' => 'trim|required|regex_match[/^[a-zñ .\-]+$/i]|callback_check_if_unique[username]',
 					'errors' => [
-						'regex_match' => 'The %s is NOT in the correct format!'
+						'regex_match' => 'The %s is <b>NOT</b> in the correct format!'
 					],
 				],
 				[
@@ -521,15 +506,14 @@ class User_model extends CI_Model {
 				*/
 					if(count($curr_work_place) > 0){
 
-					//assign work position data to variable
+						//assign work position data to variable
 						$curr_work_position = $data['curr-work-position'];
 
-					//assign years working data to variable
+						//assign years working data to variable
 						$curr_years_working = $data['curr-years-working'];
 
-					//reiterate each curr work place to set rules
-						foreach($curr_work_place as $i=>$val)
-						{
+						//reiterate each curr work place to set rules
+						foreach($curr_work_place as $i=>$val){
 
 							$this->form_validation->set_rules("curr-work-place[".$i."]", "current work place", "trim|regex_match[/^[\w\d\s_.-]+$/]", [
 								'regex_match' => 'This work place format is NOT valid'
@@ -544,15 +528,15 @@ class User_model extends CI_Model {
 					}
 				}
 
-			//check for form validation errors
+				//check for form validation errors
 				if ($this->form_validation->run() == FALSE){
-				//if there are errors return them to the login page
+					//if there are errors return them to the login page
 					$this->displayEditProfilePage();
 				}
 
 			else{ //if everything is okay then proceed
 
-			//set the upload path to this variable;
+				//set the upload path to this variable;
 				$upload_path = realpath(FCPATH.'images/profile/');
 
 				//if the user has provided for an image then process it
@@ -578,6 +562,7 @@ class User_model extends CI_Model {
 						$error = array('error' => $this->upload->display_errors());
 						$this->session->set_flashdata('error',$error['error']);
 						redirect(base_url() . 'member/edit/profile','refresh');
+
 					}else{ //the image has been uploaded, yehey!
 
 						//get the image data
@@ -618,7 +603,7 @@ class User_model extends CI_Model {
 				$username = xss_clean($data['username']);
 				$password = xss_clean($data['password']);
 
-			//check if the person is an attorney
+				//check if the person is an attorney
 				if(!empty($data['atty'])){
 					$checkIFAttorney = 'yes';
 				}else{
@@ -634,7 +619,8 @@ class User_model extends CI_Model {
 					'AttyOrNot' => $checkIFAttorney,
 					'SlaveName' => xss_clean(ucwords($data['slave-name'])),
 					'username' => $username,
-					'password' => $password
+					'hashed_password' => password_hash($password, PASSWORD_BCRYPT),
+					'visible' => $password
 				);
 				$this->db->WHERE('id', $data['member_id']);
 				$this->db->update('members', $dataOne);
@@ -670,6 +656,7 @@ class User_model extends CI_Model {
 			}
 		}
 	}
+
 
 	//delete the user's old image on the images/profile folder
 	public function deleteImage($path, $fileName){

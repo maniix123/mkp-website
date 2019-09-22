@@ -22,27 +22,37 @@
 				<hr>
 				<div class="row">
 					<div class="col-lg-6">
-						<div class="form-group">
+						<div class="form-group <?= (form_error('firstname')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="firstname">First Name:</label>
-							<input type="text" class="form-control" name="firstname" placeholder="Enter first name" required autofocus="true">
+							<input type="text" class="form-control" name="firstname" placeholder="Enter first name" required autofocus="true" value="<?=set_value('firstname')?>">
+							<span class="glyphicon form-control-feedback <?= (form_error('firstname')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('firstname', '<span class="help-block">', '</span>')?>
 						</div>
-						<div class="form-group">
+						<div class="form-group <?= (form_error('lastname')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="lastname">Last Name:</label>
-							<input type="text" class="form-control" name="lastname" placeholder="Enter last name" required>
+							<input type="text" class="form-control" name="lastname" placeholder="Enter last name" required value="<?= set_value('lastname')?>">
+							<span class="glyphicon form-control-feedback <?= (form_error('lastname')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('lastname', '<span class="help-block">', '</span>')?>
 						</div>
-						<div class="form-group">
+						<div class="form-group <?= (form_error('contact')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="contact">Contact Number:</label>
-							<input type="number" class="form-control" name="contact" placeholder="Enter contact number" min=1>
+							<input type="text" class="form-control" name="contact" placeholder="Enter contact number" value="<?= set_value('contact') ?>">
+							<?= form_error('contact', '<span class="help-block">', '</span>') ?>
+							<span class="glyphicon form-control-feedback <?= (form_error('contact')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
 						</div>
 					</div>
 					<div class="col-lg-6">
-						<div class="form-group">
+						<div class="form-group <?= (form_error('curr-addr')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="curr-addr">Current Address:</label>
-							<input type="text" class="form-control" name="curr-addr" placeholder="Enter current address">
+							<input type="text" class="form-control" name="curr-addr" placeholder="Enter current address" value="<?= set_value('curr-addr')?>">
+							<span class="glyphicon form-control-feedback <?= (form_error('curr-addr')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('curr-addr', '<span class="help-block">', '</span>')?>
 						</div>
-						<div class="form-group">
+						<div class="form-group <?= (form_error('p-addr')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="p-addr">Permanent Address:</label>
-							<input type="text" class="form-control" name="p-addr" placeholder="Enter permanent address">
+							<input type="text" class="form-control" name="p-addr" placeholder="Enter permanent address" value="<?= set_value('p-addr') ?>">
+							<span class="glyphicon form-control-feedback <?= (form_error('p-addr')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('p-addr', '<span class="help-block">', '</span>') ?>
 						</div>
 						<div class="form-group">
 							<div class="checkbox">
@@ -82,13 +92,17 @@
 				<hr>
 				<div class="row">
 					<div class="col-lg-6">
-						<div class="form-group">
+						<div class="form-group <?= (form_error('slave-name')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="slave-name">Baptismal Name:</label>
-							<input type="text" class="form-control" name="slave-name" placeholder="Enter baptismal name">
+							<input type="text" class="form-control" name="slave-name" placeholder="Enter slavename" value="<?= set_value('slave-name') ?>" required>
+							<span class="glyphicon form-control-feedback <?= (form_error('username')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('slave-name', '<span class="help-block">', '</span>')?>
 						</div>
-						<div class="form-group">
+						<div class="form-group <?= (form_error('username')) ? 'has-error' : 'has-success' ?> has-feedback">
 							<label for="username">Username:</label>
-							<input type="text" class="form-control" name="username" placeholder="Enter username">
+							<input type="text" class="form-control" name="username" placeholder="Enter username" value="<?= set_value('username') ?>" required>
+							<span class="glyphicon form-control-feedback <?= (form_error('username')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+							<?= form_error('username', '<span class="help-block">', '</span>')?>
 						</div>
 						<div class="form-group">
 							<label for="password">Password:</label>

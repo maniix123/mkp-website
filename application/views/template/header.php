@@ -12,6 +12,6 @@
 	<link rel="stylesheet" href="<?php echo base_url(); ?>css/style.css">
 	<link rel="stylesheet" href="<?php echo base_url(); ?>css/animate.css">
 	<script src="<?php echo base_url(); ?>js/functions.js"></script>
-	<title><?php echo $title; ?> - Mu Kappa Phi Fraternity</title>
+	<title><?php echo $title; ?> - Mu Kappa Phi Fraternity & Sorrority</title>
 </head>
 <body>

@@ -15,6 +15,9 @@
 	<section class="content">
 		<div class="box box-info">
 			<div class="box-body">
+				<div class="alert alert-info <?= empty($this->session->flashdata('success')) ? 'hide' : '' ?>">
+					<p class="text-center"><?= $this->session->flashdata('success') ?></p>
+				</div>
 				<div class="table-responsive">
 					<table class="table table-striped table-bordered table-hover" id="memberTable">
 						<thead>

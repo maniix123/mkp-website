@@ -167,7 +167,7 @@
 							</div>
 							<div class="form-group <?= (form_error('password')) ? 'has-error' : 'has-success' ?> has-feedback">
 								<label for="password">Password:</label>
-								<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?= set_value('password', $member[0]->password) ?>" required>
+								<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?= set_value('password', $member[0]->visible) ?>" required>
 								<span class="glyphicon form-control-feedback <?= (form_error('password')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
 								<?= form_error('password', '<span class="help-block">','</span>')?>
 							</div>

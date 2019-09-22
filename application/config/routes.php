@@ -8,6 +8,9 @@ $route['default_controller'] = 'pagecontroller/view';
 //Admin routes
 $route['member'] = 'admincontroller/index';
 
+//testing route bitch
+// $route['test'] = 'testcontroller/changePasswords';
+
 //log route
 $route['member/view/logs'] = 'logcontroller/index';
 $route['member/add/(:any)'] = 'admincontroller/displayAddPage/$1';

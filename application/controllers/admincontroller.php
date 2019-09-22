@@ -11,13 +11,14 @@ class admincontroller extends CI_Controller {
 
 		//Load the blog model
 		$this->load->model('Blog_model', 'blog');
+		
 		//Load the helpers
 		$this->load->helper('security');
 		$this->load->helper('form');
 
 		//Load the session library
 		$this->load->library('form_validation');
-		
+
 		//load the pagination library
 		$this->load->library('pagination');
 	}
@@ -83,7 +84,6 @@ class admincontroller extends CI_Controller {
 		}
 		else{
 			//else load the error view again.
-			die();
 			$data['title'] = 'Page not found';
 			$this->load->view('admin/admin-templates/header', $data);
 			$this->load->view('admin/admin-templates/sidebar');
@@ -135,8 +135,34 @@ class admincontroller extends CI_Controller {
 	 */
 	public function store(){
 		
-		//Add the User to the Database
-		$this->user->create($this->input->post());
+		//Validate this fucking shit
+		$this->form_validation->set_rules(
+			'username', 
+			'username', 
+			'required|is_unique[members.username]',
+			[
+				'is_unique' => 'THE USERNAME IS ALREADY TAKEN!'
+			]
+		);
+		$this->form_validation->set_rules(
+			'slave-name',
+			'slave-name',
+			'required|is_unique[members.SlaveName]',
+			[
+				'is_unique' => 'THE SLAVE NAME IS ALREADY TAKEN!'
+			]
+		);
+		if ($this->form_validation->run() == FALSE){
+
+			//if there are errors return them to the edit page
+			$this->displayAddPage('member');
+
+		}else{
+
+			//Add the User to the Database
+			$this->user->create($this->input->post());
+		}
+
 	}
 
 	/**
@@ -194,7 +220,7 @@ class admincontroller extends CI_Controller {
 				$data['title'] = 'MKP Members - Profile';
 				$this->load->view('admin/profile',$data);
 			}
-	//if the passed data is "batches"
+		//if the passed data is "batches"
 		}elseif($something == 'batches'){
 
 		//get all batches from the database;
@@ -303,7 +329,27 @@ class admincontroller extends CI_Controller {
 	}
 
 	/**
-	 * The function to display the adin edit batch
+	 * Update Member function with outside fucking validation
+	 * @param  array $data fuckingshit
+	 * @return void       
+	 */
+	public function updateMember($data){
+
+		//validate the data
+		if ($this->form_validation->run('update-member') == FALSE){
+
+			//if there are errors return them to the edit page
+			$this->editMember($data['member_id']);
+
+		}else{
+
+			$this->user->updateMember($data);
+
+		}
+	}
+
+	/**
+	 * The function to display the admin edit batch
 	 * @param  int $id The batch id
 	 * @return void    
 	 */
@@ -324,7 +370,7 @@ class admincontroller extends CI_Controller {
 	}
 
 	/**
-	 * The function to delet the delete page
+	 * The function to display the delete page
 	 * @param  int $id   The passed in id
 	 * @param  string $type The passed in data to determine what to delete
 	 * @return void
@@ -344,8 +390,7 @@ class admincontroller extends CI_Controller {
 			$data['title'] = 'MKP Members - Display Member';
 			$data['member'] = $this->user->getMemberFromId($id);
 			$this->load->view('admin/deletemember', $data);
-		}
-		else{
+		}else{
 			// show the delete batch delete page;
 		}
 	}
@@ -373,7 +418,7 @@ class admincontroller extends CI_Controller {
 	 */
 	public function update($type){
 		if($type == 'member'){
-			$this->user->updateMember($this->input->post());
+			$this->updateMember($this->input->post());
 		}
 		elseif($type == 'batch'){
 			$this->user->updateBatch($this->input->post());
@@ -409,5 +454,54 @@ class admincontroller extends CI_Controller {
 		location.href="'.$url.'";
 		</script>';
 	}
+	/**
+	 * Callback function to check if field is unique
+	 * @param  string $passed_data The actual passed in data from form
+	 * @param  string $field       The field to be checked
+	 * @return bool                Return if true or false
+	 */
+	function check_if_unique($passed_data, $field) {
 
+		//get the id if this is an update
+		$id = $this->input->post('member_id');
+		if($id == NULL){
+
+			//this is when user updates his profile;
+			$id = $this->session->id;
+		}
+
+		$result = $this->check_unique_field($id, $field, $passed_data);
+		if($result == 0){
+			$response = true;
+		
+		}else{
+		
+			$this->form_validation->set_message('check_if_unique', '%s is already taken. Please choose another');
+			$response = false;
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Here we actually query the database
+	 * @param  int    $id          The id that is passed
+	 * @param  string $field       The field that will be checked
+	 * @param  string $passed_data The actual text that is passed
+	 * @return int                 The number of rows affected
+	 */
+	function check_unique_field($id, $field, $passed_data) {
+
+		if($field == 'SlaveName' && empty($passed_data)){
+			return 0;
+			
+		}else{
+
+			$this->db->where($field, $passed_data);
+			if($id) {
+				$this->db->where_not_in('id', $id);
+			}
+			return $this->db->get('members')->num_rows();
+		}	
+	}
 }

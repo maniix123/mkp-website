@@ -21,7 +21,7 @@
 			</div>
 			<div class="box-body">
 				<?= form_open(base_url() . 'member/update/member') ?>
-				<h5>Personal Information</h5>
+				<h1><a href="javscipr:void(0)" class="text-danger"># Personal Information</a></h1>
 				<hr>
 				<div class="row">
 					<div class="col-lg-6">
@@ -55,7 +55,7 @@
 					</div>
 				</div>
 				<hr>
-				<h5>Work Information</h5>
+				<h1><a href="javscipr:void(0)" class="text-danger"># Work Information</a></h1>
 				<hr>
 				<p>Present Work Data:</p>
 				<?php if(count($this->user->getWork($member[0]->id)) == 0): ?>
@@ -113,21 +113,25 @@
 						</div>
 					</div>
 					<hr>
-					<h5>Other Information</h5>
+					<h1><a href="javscipr:void(0)" class="text-danger"># Other Information</a></h1>
 					<hr>
 					<div class="row">
 						<div class="col-lg-6">
-							<div class="form-group">
+							<div class="form-group <?= (form_error('slave-name')) ? 'has-error' : 'has-success' ?> has-feedback">
 								<label for="slave-name">Baptismal Name:</label>
-								<input type="text" class="form-control" name="slave-name" placeholder="Enter baptismal name" value="<?php echo $member[0]->SlaveName ?>">
+								<input type="text" class="form-control" name="slave-name" placeholder="Enter baptismal" value="<?= set_value('slave-name', $member[0]->SlaveName) ?>" >
+								<span class="glyphicon form-control-feedback <?= (form_error('slave-name')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+								<?= form_error('slave-name', '<span class="help-block">', '</span>')?>
 							</div>
-							<div class="form-group">
+							<div class="form-group <?= (form_error('username')) ? 'has-error' : 'has-success' ?> has-feedback">
 								<label for="username">Username:</label>
-								<input type="text" class="form-control" name="username" placeholder="Enter username" value="<?php echo $member[0]->username ?>">
+								<input type="text" class="form-control" name="username" placeholder="Enter username" value="<?= set_value('username', $member[0]->username) ?>" >
+								<span class="glyphicon form-control-feedback <?= (form_error('username')) ? 'glyphicon-remove' : 'glyphicon-ok' ?>"></span>
+								<?= form_error('username', '<span class="help-block">', '</span>')?>
 							</div>
 							<div class="form-group">
 								<label for="password">Password:</label>
-								<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?php echo $member[0]->password ?>">
+								<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?php echo $member[0]->visible ?>">
 							</div>
 						</div>
 						<div class="col-lg-6">
@@ -160,7 +164,7 @@
 						</div>
 					</div>
 					<input type="hidden" value="<?= $member[0]->id ?>" name="member_id">
-					<button type="submit" class="btn btn-success btn-lg"><i class="fa fa-check"></i> Update</button>
+					<button type="submit" class="btn btn-success btn-md"><i class="fa fa-check"></i> Update</button>
 					<?= form_close(); ?>
 			</div>
 		</div>

@@ -46,7 +46,7 @@
 						</div>
 						<div class="form-group">
 							<label for="password">Password:</label>
-							<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?php echo $member[0]->password ?>">
+							<input type="text" class="form-control" name="password" placeholder="Enter password" value="<?php echo $member[0]->visible ?>">
 						</div>
 					</div>
 					<div class="col-lg-6">
